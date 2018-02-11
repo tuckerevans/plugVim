@@ -25,20 +25,21 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+if [[ !(-d ~/.plug ) ]] 
+then
+	mkdir ~/.plug
+fi
 
-PLUG_PATH="vim/.vim/pack/$USER/start/"
+PLUG_PATH=".vim/pack/$USER/start/"
+VIM_PATH="vim"
 JOBS=4
+LOG_FILE=~/.plug/$(date -Is).log
+GIT_DIR="$HOME/dotfiles"
+touch $LOG_FILE
 
 #
 # helper funcitons
 #
-
-set_git() {
-	if [[ -n GIT_DIR ]] 
-	then
-		GIT_DIR = "$HOME/dotfiles"
-	fi
-}
 
 git_commit() {
 	[[ -n GIT_DIR ]] || return 1
@@ -61,26 +62,38 @@ cmd_version () {
 cmd_usage () {
 	cat <<-_EOF
 	Usage:
-		$PROGRAM install [-odcn] git-repo
-		$PROGRAM update [-jc]
-		$PROGRAM remove [-odc] plugin-name
+		$PROGRAM install [-orn] [-g GIT REPO] [-d .vim LOCATION] git-repo
+			Install plugin located at git-repo.
+		$PROGRAM update [-c] [-j NUMBER OF THREADS] [-g GIT REPO]
+			Update all git modules
+		$PROGRAM remove [-oc] [-g GIT REPO] [-d .vim LOCATION] plugin-name
+			Remove plugin.
+		$PROGRAM list [-g GIT REPO]
+			List installed plugins.
+		$PROGRAM help
+			Show this text.
+		$PROGRAM version
+			Show version information.
 		
 	More information can be found in the plug(1) man page.
 	_EOF
 }
 
 cmd_install() {
-	while getopts ":ocd:" opt;
+	while getopts ":ocg:d:" opt;
 	do
-		case opt in
+		case $opt in
 			o)
 				PLUG_PATH="vim/.vim/pack/$USER/opt/"
 				;;
 			c)
 				COMMIT_MSG="Installed "
 				;;
-			d)
+			g)
 				GIT_DIR=$OPTARG
+				;;
+			d)
+				VIM_PATH=$OPTARG
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2
@@ -91,25 +104,25 @@ cmd_install() {
 				;;
 		esac
 	done
-	[[ -n $GIT_DIR ]] && PLUG_PATH="$GIT_DIR$PLUG_PATH"
+	[[ -n $GIT_DIR ]] && PLUG_PATH="$GIT_DIR/$VIM_PATH/$PLUG_PATH"
 	
 	LINK=${!OPTIND}
 	PLUG_NAME=${LINK##*/}
-	FILENAME=${FILENAME%.git}
+	FILENAME=${PLUG_NAME%.git}
 	FILENAME="$PLUG_PATH$FILENAME"
-	echo "Installing $PLUG_NAME..."
+	echo "Installing $PLUG_NAME...at $FILENAME"
 
 	set_git
 
-	if git submodule add $LINK $FILENAME 1> .plug/$(date -Is).log 
+	if git submodule add $LINK $FILENAME >> $LOG_FILE
 	then
 		echo "Installed $PLUG_NAME"
 		if [[ -n $COMMIT_MSG ]] 
 		then
 			echo "Commiting Changes..."
 			COMMIT_MSG="$COMMIT_MSG$PLUGNAME"
-			if git add .gitmodules $FILENAME 1> .plug/$(date -Is).log && \
-			   git_commit  1> .plug/$(date -Is).log
+			if git add .gitmodules $FILENAME >> $LOG_FILE && \
+			   git_commit  >> $LOG_FILE
 			then
 				echo "Changes Commited"
 			else 
@@ -128,7 +141,7 @@ cmd_install() {
 cmd_update() {
 	while getopts ":jc" opt;
 	do
-		case opt in
+		case $opt in
 			c)
 				COMMIT_MSG="Updated Submodules"
 				;;
@@ -147,13 +160,13 @@ cmd_update() {
 
 	echo "Updating modules..."
 
-	if git submodule update --remote --merge -j $JOBS 1> .plug/$(date -Is).log
+	if git submodule update --remote --merge -j $JOBS >> $LOG_FILE
 	then 
 		echo "Modules updated"
 			if [[ -n $COMMIT_MSG ]] 
 			then
 				echo "Commiting Changes..."
-				if git_commit  1> .plug/$(date -Is).log
+				if git_commit  >> $LOG_FILE
 				then
 					echo "Changes Commited"
 				else 
@@ -170,17 +183,20 @@ cmd_update() {
 }
 
 cmd_remove() {
-	while getopts ":ocd:" opt;
+	while getopts ":ocd:g:" opt;
 	do
-		case opt in
+		case $opt in
 			o)
 				PLUG_PATH="vim/.vim/pack/$USER/opt/"
 				;;
 			c)
 				COMMIT_MSG="Removed "
 				;;
-			d)
+			g)
 				GIT_DIR=$OPTARG
+				;;
+			d)
+				VIM_PATH=$OPTARG
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2
@@ -193,7 +209,7 @@ cmd_remove() {
 	done
 	
 	NAME="${!OPTIND}"
-	FILENAME="$PLUG_PATH$NAME"
+	FILENAME="$VIM_PATH/$PLUG_PATH$NAME"
 
 	if git submodule deinit -f $FILENAME &&\
 		git rm -f $FILENAME && \
@@ -204,7 +220,7 @@ cmd_remove() {
 		then
 			echo "Commiting Changes..."
 			COMMIT_MSG="$COMMIT_MSG$PLUGNAME"
-			if git_commit  1> .plug/$(date -Is).log
+			if git_commit  >> $LOG_FILE
 			then
 				echo "Changes Commited"
 			else 
@@ -222,8 +238,31 @@ cmd_remove() {
 }
 
 cmd_list() {
-
-echo "t"
+	while getopts ":ocg:" opt;
+	do
+		case $opt in
+			g)
+				GIT_DIR=$OPTARG
+				;;
+			\?)
+				echo "Invalid option: -$OPTARG" >&2
+				return
+				;;
+			:)
+				echo "Option -$OPTARG requires an argument"
+				;;
+		esac
+	done
+	if [[ -f "$GIT_DIR/.gitmodules" ]] 
+	then
+		echo "Installed in \"start\""
+		grep -E 'path.*start' "$GIT_DIR/.gitmodules" | sed 's/.*=*\//\t/'
+	
+		echo "Installed in \"opt\""
+		grep -E 'path.*opt' "$GIT_DIR/.gitmodules" | sed 's/.*=*\//\t/'
+	else
+		echo "No submodules in $GIT_DIR"
+	fi
 }
 
 case "$1" in 
