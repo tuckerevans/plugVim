@@ -35,6 +35,7 @@ VIM_PATH="vim"
 JOBS=4
 LOG_FILE=~/.plug/$(date -Is).log
 GIT_DIR="$HOME/dotfiles"
+PROGRAM="plug"
 touch $LOG_FILE
 
 #
@@ -45,7 +46,7 @@ git_commit() {
 	[[ -n GIT_DIR ]] || return 1
 	[[ -n COMMIT_MSG ]] || return 1
 
-	return git -C GIT_DIR commit -m"$COMMIT_MSG"
+	return git -C GIT_DIR commit -m"$COMMIT_MSG" >> $LOG_FILE
 }
 
 #
@@ -53,30 +54,31 @@ git_commit() {
 #
 
 cmd_version () {
-	cat <<-_EOF
+	cat <<-EOF
 	plug version 0.0.1
-	_EOF
+	EOF
 }
 
 
 cmd_usage () {
-	cat <<-_EOF
+	cmd_version
+	cat <<-EOF
 	Usage:
-		$PROGRAM install [-orn] [-g GIT REPO] [-d .vim LOCATION] git-repo
-			Install plugin located at git-repo.
-		$PROGRAM update [-c] [-j NUMBER OF THREADS] [-g GIT REPO]
-			Update all git modules
-		$PROGRAM remove [-oc] [-g GIT REPO] [-d .vim LOCATION] plugin-name
-			Remove plugin.
-		$PROGRAM list [-g GIT REPO]
-			List installed plugins.
-		$PROGRAM help
-			Show this text.
-		$PROGRAM version
-			Show version information.
-		
+	        $PROGRAM install [-orn] [-g GIT REPO] [-d .vim LOCATION] git-repo
+	                Install plugin located at git-repo.
+	        $PROGRAM update [-c] [-j NUMBER OF THREADS] [-g GIT REPO]
+	                Update all git modules
+	        $PROGRAM remove [-oc] [-g GIT REPO] [-d .vim LOCATION] plugin-name
+	                Remove plugin.
+	        $PROGRAM list [-g GIT REPO]
+	                List installed plugins.
+	        $PROGRAM help
+	                Show this text.
+	        $PROGRAM version
+	                Show version information.
+
 	More information can be found in the plug(1) man page.
-	_EOF
+	EOF
 }
 
 cmd_install() {
@@ -104,24 +106,22 @@ cmd_install() {
 				;;
 		esac
 	done
-	[[ -n $GIT_DIR ]] && PLUG_PATH="$GIT_DIR/$VIM_PATH/$PLUG_PATH"
 	
 	LINK=${!OPTIND}
 	PLUG_NAME=${LINK##*/}
 	FILENAME=${PLUG_NAME%.git}
-	FILENAME="$PLUG_PATH$FILENAME"
+	FILENAME="$VIM_PATH/$PLUG_PATH$FILENAME"
 	echo "Installing $PLUG_NAME...at $FILENAME"
 
-	set_git
 
-	if git submodule add $LINK $FILENAME >> $LOG_FILE
+	if git -C $GIT_DIR submodule add --depth 1 $LINK $FILENAME >> $LOG_FILE
 	then
 		echo "Installed $PLUG_NAME"
 		if [[ -n $COMMIT_MSG ]] 
 		then
 			echo "Commiting Changes..."
 			COMMIT_MSG="$COMMIT_MSG$PLUGNAME"
-			if git add .gitmodules $FILENAME >> $LOG_FILE && \
+			if git -C $GIT_DIR add .gitmodules $FILENAME >> $LOG_FILE && \
 			   git_commit  >> $LOG_FILE
 			then
 				echo "Changes Commited"
@@ -160,7 +160,7 @@ cmd_update() {
 
 	echo "Updating modules..."
 
-	if git submodule update --remote --merge -j $JOBS >> $LOG_FILE
+	if git -C $GIT_DIR submodule update --remote --merge -j $JOBS >> $LOG_FILE
 	then 
 		echo "Modules updated"
 			if [[ -n $COMMIT_MSG ]] 
@@ -211,9 +211,9 @@ cmd_remove() {
 	NAME="${!OPTIND}"
 	FILENAME="$VIM_PATH/$PLUG_PATH$NAME"
 
-	if git submodule deinit -f $FILENAME &&\
-		git rm -f $FILENAME && \
-		rm -rfv ".git/modules/$FILENAME"
+	if git -C $GIT_DIR submodule deinit -f $FILENAME >> $LOG_FILE &&\
+		git -C $GIT_DIR rm -f $FILENAME >> $LOG_FILE&& \
+		rm -rfv ".git/modules/$FILENAME" >> $LOG_FILE
 	then
 		
 		if [[ -n $COMMIT_MSG ]] 
@@ -286,7 +286,7 @@ case "$1" in
 		shift
 		cmd_update "$@"
 		;;
-	remove|delete)
+	rm|remove|delete)
 		shift
 		cmd_remove "$@"
 esac
