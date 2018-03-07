@@ -45,8 +45,10 @@ touch $LOG_FILE
 git_commit() {
 	[[ -n GIT_DIR ]] || return 1
 	[[ -n COMMIT_MSG ]] || return 1
-
-	return git -C GIT_DIR commit -m"$COMMIT_MSG" >> $LOG_FILE
+	git -C $GIT_DIR add "$VIM_PATH/.vim/pack/*"
+	git -C $GIT_DIR commit -m"$COMMIT_MSG
+	Commit created by PlugVim" >> $LOG_FILE
+	return 
 }
 
 #
@@ -64,7 +66,7 @@ cmd_usage () {
 	cmd_version
 	cat <<-EOF
 	Usage:
-	        $PROGRAM install [-orn] [-g GIT REPO] [-d .vim LOCATION] git-repo
+	        $PROGRAM install [-oc] [-g GIT REPO] [-d .vim LOCATION] git-repo
 	                Install plugin located at git-repo.
 	        $PROGRAM update [-c] [-j NUMBER OF THREADS] [-g GIT REPO]
 	                Update all git modules
@@ -120,15 +122,9 @@ cmd_install() {
 		if [[ -n $COMMIT_MSG ]] 
 		then
 			echo "Commiting Changes..."
-			COMMIT_MSG="$COMMIT_MSG$PLUGNAME"
-			if git -C $GIT_DIR add .gitmodules $FILENAME >> $LOG_FILE && \
-			   git_commit  >> $LOG_FILE
-			then
-				echo "Changes Commited"
-			else 
-				echo "Error committing changes"
-				return 1
-			fi
+			COMMIT_MSG="$COMMIT_MSG$PLUG_NAME"
+			echo $COMMIT_MSG
+			git_commit  >> $LOG_FILE
 		fi
 	else 
 		exit 1
@@ -166,13 +162,7 @@ cmd_update() {
 			if [[ -n $COMMIT_MSG ]] 
 			then
 				echo "Commiting Changes..."
-				if git_commit  >> $LOG_FILE
-				then
-					echo "Changes Commited"
-				else 
-					echo "Error committing changes"
-					return 1
-				fi
+				git_commit  >> $LOG_FILE
 			fi
 	else 
 		exit 1
@@ -208,8 +198,8 @@ cmd_remove() {
 		esac
 	done
 	
-	NAME="${!OPTIND}"
-	FILENAME="$VIM_PATH/$PLUG_PATH$NAME"
+	PLUG_NAME="${!OPTIND}"
+	FILENAME="$VIM_PATH/$PLUG_PATH$PLUG_NAME"
 
 	if git -C $GIT_DIR submodule deinit -f $FILENAME >> $LOG_FILE &&\
 		git -C $GIT_DIR rm -f $FILENAME >> $LOG_FILE&& \
@@ -219,21 +209,17 @@ cmd_remove() {
 		if [[ -n $COMMIT_MSG ]] 
 		then
 			echo "Commiting Changes..."
-			COMMIT_MSG="$COMMIT_MSG$PLUGNAME"
-			if git_commit  >> $LOG_FILE
-			then
-				echo "Changes Commited"
-			else 
-				echo "Error committing changes"
-				return 1
-			fi
+			COMMIT_MSG="$COMMIT_MSG$PLUG_NAME"
+			echo $PLUG_NAME
+			echo $COMMIT_MSG
+			git_commit  >> $LOG_FILE
 		fi
 	else 
-		echo "Error removing $NAME"
+		echo "Error removing $PLUG_NAME"
 		exit 1
 	fi
 
-	echo "$NAME removed"
+	echo "$PLUG_NAME removed"
 	return 0
 }
 
@@ -270,7 +256,7 @@ case "$1" in
 		shift
 		cmd_install "$@"
 		;;
-	help|--help)
+	help|--help|-h|-help)
 		shift
 		cmd_usage "$@"
 		;;
