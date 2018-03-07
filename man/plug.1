@@ -1,0 +1,101 @@
+.TH PLUG 1 "2018 February 15" "PlugVim 0.0.1" "PlugVim Manual"
+.SH NAME
+plug - manages vim plugins using git submodules
+
+.SH SYNOPSIS
+.nf
+\fBplug install\fP [<options>] "remote git repo"
+\fBplug update\fP  [<options>]
+\fBplug remove\fP  [<options>] plugin-name
+\fBplug list\fP    [<options>]
+\fBplug help\fP
+\fBplug version\fP
+.fi
+
+.SH DESCRIPTION
+plug is a simple vim plugin manager that uses vim 8's native plugin
+support and git submodules.
+
+
+.SH COMMANDS
+.TP
+\fBinstall\fP [\fI-oc\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
+
+Install plugin at remote git repo as submodule in GIT-REPO.
+
+
+.TP
+\fBupdate\fP [\fI-c\fP] [-g \fIGIT-REPO\fP] [-j \fITHREAD-COUNT\fP] "remote git repo"
+Update all git modules.
+
+.TP
+\fBremove\fP [\fI-oc\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
+Remove plugin.
+
+.TP
+\fBlist\fP [-g \fIGIT-REPO\fP]
+List installed plugins.
+
+.TP
+\fBhelp\fP
+Display usage information.
+
+.TP
+\fBversion\fP
+Display version information.
+
+.SH OPTIONS
+.PP
+\-o
+.RS 4
+Store plugin in opt folder rather than start.
+.RE
+
+.PP
+\-c
+.RS 4
+Commit changes to repo. This will commit any staged changes, I
+recommend committing these with a meaningful message before committing
+with plug.
+.RE
+
+.PP
+\-g \fIGIT-REPO\fP
+.RS 4
+Use GIT-REPO as directory for git commands uses "git -C
+GIT-REPO"
+Default: ~/dotfiles/
+.RE
+
+.PP
+\-d \fIdirectory\fP
+.RS 4
+Uses directory as location of .vim in git repo
+Default: GIT_REPO/vim/
+.RE
+
+.PP
+\-j
+.RS 4
+Number of jobs for "git submodule update" to use.
+.RE
+
+.SH AUTHOR
+.B plug
+was written by
+.MT tuckerevans24@gmail.com
+Tucker Evans
+.ME .
+
+.SH "SEE ALSO"
+git-submodule(1), vim(1)
+
+.SH BUGS
+This is a very early version, there are probably, I'm just not aware
+of them yet.
+.PP
+You can report bugs
+.UR https://github.com/tuckerevans/plugvim/issues
+here
+.UE .
+
