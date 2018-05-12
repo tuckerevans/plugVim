@@ -33,7 +33,7 @@ fi
 PLUG_PATH=".vim/pack/$USER/start/"
 VIM_PATH="vim"
 JOBS=4
-LOG_FILE=~/.plug/$(date -Is).log
+LOG_FILE=/tmp/PLUGVIM-$(date -Is).log
 GIT_DIR="$HOME/dotfiles"
 PROGRAM="plug"
 touch $LOG_FILE
@@ -84,7 +84,7 @@ cmd_usage () {
 }
 
 cmd_install() {
-	while getopts ":ocg:d:" opt;
+	while getopts ":ocg:d:l" opt;
 	do
 		case $opt in
 			o)
@@ -98,6 +98,9 @@ cmd_install() {
 				;;
 			d)
 				VIM_PATH=$OPTARG
+				;;
+			l)
+				LOG_FILE=~/.plug/$(date -Is).log
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2
@@ -135,7 +138,7 @@ cmd_install() {
 }
 
 cmd_update() {
-	while getopts ":jc" opt;
+	while getopts ":jcl" opt;
 	do
 		case $opt in
 			c)
@@ -143,6 +146,9 @@ cmd_update() {
 				;;
 			j)
 				JOBS=$OPTARG
+				;;
+			l)
+				LOG_FILE=~/.plug/$(date -Is).log
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2
@@ -173,7 +179,7 @@ cmd_update() {
 }
 
 cmd_remove() {
-	while getopts ":ocd:g:" opt;
+	while getopts ":ocd:g:l" opt;
 	do
 		case $opt in
 			o)
@@ -187,6 +193,9 @@ cmd_remove() {
 				;;
 			d)
 				VIM_PATH=$OPTARG
+				;;
+			l)
+				LOG_FILE=~/.plug/$(date -Is).log
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2
@@ -224,11 +233,14 @@ cmd_remove() {
 }
 
 cmd_list() {
-	while getopts ":ocg:" opt;
+	while getopts ":ocg:l" opt;
 	do
 		case $opt in
 			g)
 				GIT_DIR=$OPTARG
+				;;
+			l)
+				LOG_FILE=~/.plug/$(date -Is).log
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" >&2

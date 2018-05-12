@@ -19,21 +19,21 @@ support and git submodules.
 
 .SH COMMANDS
 .TP
-\fBinstall\fP [\fI-oc\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
+\fBinstall\fP [\fI-ocl\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
 
 Install plugin at remote git repo as submodule in GIT-REPO.
 
 
 .TP
-\fBupdate\fP [\fI-c\fP] [-g \fIGIT-REPO\fP] [-j \fITHREAD-COUNT\fP] "remote git repo"
+\fBupdate\fP [\fI-cl\fP] [-g \fIGIT-REPO\fP] [-j \fITHREAD-COUNT\fP] "remote git repo"
 Update all git modules.
 
 .TP
-\fBremove\fP [\fI-oc\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
+\fBremove\fP [\fI-ocl\fP] [-g \fIGIT-REPO\fP] [-d \fI.vim-LOCATION\fP] plugin-name
 Remove plugin.
 
 .TP
-\fBlist\fP [-g \fIGIT-REPO\fP]
+\fBlist\fP [-l] [-g \fIGIT-REPO\fP]
 List installed plugins.
 
 .TP
@@ -79,6 +79,12 @@ Default: GIT_REPO/vim/
 .RS 4
 Number of jobs for "git submodule update" to use.
 .RE
+
+.PP
+\-l
+.RS 4
+Changes logfile (where internal command output is redirected) from the
+default of /tmp/PLUGVIM-date.log to ~/.plug/date.log
 
 .SH AUTHOR
 .B plug

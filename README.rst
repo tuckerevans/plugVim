@@ -44,6 +44,7 @@ Options
 -  **-d "directory containing .vim"** default: GIT_REPO/vim/
 -  **-o** place plugin in opt folder instead of start.
 -  **-c** commit changes
+-  **-l** log internal command output in ~/.plug/date.log instead of /tmp/PLUGVIM-date.log
 
 Examples
 ~~~~~~~~
